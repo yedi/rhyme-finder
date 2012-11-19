@@ -9,17 +9,21 @@
 
 (def pronunciations (pronunciation-list))
 
+(defn update-values [f m]
+  (zipmap (keys m) (map f (vals m))))
+
 (defn phone-list "Loads all of the phones into memory" []
   (parse-lines "Documents/dev/rhyme-finder/cmudict-phones.txt"))
 
 (def phones (phone-list))
 
 (defn get-phones []
-  (clojure.walk/keywordize-keys
-   (reduce
-    (fn [m [v k]] (update-in m [k] #(conj % v)))
-    {}
-    (map #(clojure.string/split % #"\s") phones))))
+ (update-values #(map clojure.string/lower-case %)
+   (clojure.walk/keywordize-keys
+    (reduce
+     (fn [m [v k]] (update-in m [k] #(conj % v)))
+     {}
+     (map #(clojure.string/split % #"\s") phones)))))
 
 (defn get-poem [filename]
   (parse-lines filename))
@@ -30,15 +34,33 @@
    #"\s"))
 
 (defn check-line [line words]
-  "checks the line to see if it matches a word in the word-list. If so, returns the a map, {word <word's pronunciation>}. Else returns nil"
+  "checks the line to see if it matches a word in the word-list. If so, returns
+ the a map, {word <word's pronunciation>}. Else returns nil"
   (let [word-pronunciation (clojure.string/split (clojure.string/lower-case line) #"\s" 2)]
     (if (some #{(first word-pronunciation)} (map clojure.string/lower-case words))
-      {(first word-pronunciation) (rest word-pronunciation)}
+      {(first word-pronunciation) (first (rest word-pronunciation))}
       nil)))
 
 (defn load-pronunciations [words]
   "Takes a list of words and returns a mapping of those words to their pronunctiation"
-  (reduce merge (map #(check-line % words) pronunciations)))
+  (update-values remove-numbers-from-string
+                 (reduce merge (map #(check-line % words) pronunciations))))
 
-; (load-pronunciations (to-words (get-poem "Documents/dev/rhyme-finder/poems/test.txt")))
-;{"outperforms" (" aw1 t p er0 f ao1 r m z"), "fest" (" f eh1 s t"), "a" (" ah0"), "but" (" b ah1 t"), "best" (" b eh1 s t"), "for" (" f ao1 r"), "is" (" ih1 z"), "it" (" ih1 t"), "enough" (" ih0 n ah1 f"), "the" (" dh ah0"), "test" (" t eh1 s t"), "not" (" n aa1 t"), "rest" (" r eh1 s t"), "quite" (" k w ay1 t"), "this" (" dh ih1 s")}
+(defn remove-numbers-from-string [a-string]
+  (apply str (filter #(not (Character/isDigit %)) a-string)))
+
+(defn remove-numbers [string-list]
+  (map remove-numbers-from-string string-list))
+
+(defn pure-rhyme? [word1 word2]
+  "Returns true if both words(strings?) have a pure rhyme with each other"
+  nil)
+
+(defn vowels-only [wp]
+  "returns only the vowel phones of the pronunciation"
+  (filter
+   (fn [word]
+     (if (some #{word} (:vowel (get-phones)))
+       true
+       false))
+   (clojure.string/split wp #"\s")))
