@@ -61,6 +61,11 @@
    (= (vowels-only wp1) (vowels-only wp2))
    (= (last wp1) (last wp2))))
 
+(defn pure-end-rhyme? [wp1 wp2]
+  (and
+   (= (last (vowels-only wp1)) (last (vowels-only wp2)))
+   (= (last wp1) (last wp2))))
+
 (defn vowels-only [wp]
   "returns only the vowel phones of the pronunciation"
   (filter
