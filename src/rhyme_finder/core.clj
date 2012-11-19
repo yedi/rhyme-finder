@@ -43,7 +43,9 @@
 
 (defn load-pronunciations [words]
   "Takes a list of words and returns a mapping of those words to their pronunctiation"
-  (update-values remove-numbers-from-string
+  (update-values (comp
+                  #(clojure.string/split % #"\s")
+                  remove-numbers-from-string)
                  (reduce merge (map #(check-line % words) pronunciations))))
 
 (defn remove-numbers-from-string [a-string]
@@ -52,9 +54,12 @@
 (defn remove-numbers [string-list]
   (map remove-numbers-from-string string-list))
 
-(defn pure-rhyme? [word1 word2]
+; wp* denotes the word-pronunciation of a word
+(defn pure-rhyme? [wp1 wp2]
   "Returns true if both words(strings?) have a pure rhyme with each other"
-  nil)
+  (and
+   (= (vowels-only wp1) (vowels-only wp2))
+   (= (last wp1) (last wp2))))
 
 (defn vowels-only [wp]
   "returns only the vowel phones of the pronunciation"
@@ -62,5 +67,4 @@
    (fn [word]
      (if (some #{word} (:vowel (get-phones)))
        true
-       false))
-   (clojure.string/split wp #"\s")))
+       false)) wp))
