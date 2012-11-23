@@ -98,5 +98,30 @@
   (let [wp-mapping (load-pronunciations (to-words poem))]
     (group-by #(get-end-rhyme (get-wp-from-mapping wp-mapping %)) poem)))
 
+(defn settize [vec]
+  (reduce
+   (fn [vec-set item]
+     (if (some #{item} vec-set)
+       vec-set
+       (conj vec-set item)))
+   []
+   vec))
+ 
+(defn rhyme-scheme [poem]
+  "returns the rhyme scheme of a poem"
+  (let [wp-mapping (load-pronunciations (to-words poem))
+        end-rhymes (map #(get-end-rhyme (get-wp-from-mapping wp-mapping %)) poem)]
+    (reduce
+     (fn [scheme end-rhyme]
+       (let [end-rhyme-set (settize end-rhymes)]
+         (str scheme (.indexOf end-rhyme-set end-rhyme))))
+     ""
+     end-rhymes)))
+
 ;rhyme-finder.core> (classify-lines (get-poem "poems/abab.txt"))
-;{("ey") ["i'm writing a poem today" "i don't care what you say"], ("eh" "l") ["i hope it turns out swell" "because we're all under a spell"]}
+;{("ey") ["i'm writing a poem today" "i don't care what you say"],
+;("eh" "l") ["i hope it turns out swell" "because we're all under a
+                                        ;spell"]}
+
+;rhyme-finder.core> (rhyme-scheme (get-poem "poems/abab.txt"))
+;"0101"
