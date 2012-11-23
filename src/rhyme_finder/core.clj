@@ -68,11 +68,7 @@
 
 (defn vowels-only [wp]
   "returns only the vowel phones of the pronunciation"
-  (filter
-   (fn [phone]
-     (if (is-vowel? phone)
-       true
-       false)) wp))
+  (filter is-vowel? wp))
 
 ; wp* denotes the word-pronunciation of a word
 (defn pure-rhyme? [wp1 wp2]
