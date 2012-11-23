@@ -1,10 +1,15 @@
 # rhyme-finder
 
-A Clojure library designed to ... well, that part is up to you.
+A Clojure library for performing rhyme analysis on poems
 
 ## Usage
+You can store your poem in any text file
 
-FIXME
+    (get-poem filename) 
+returns the poem in the correct format
+
+    (rhyme-scheme poem) 
+returns the rhyme scheme of a poem
 
 ## License
 
