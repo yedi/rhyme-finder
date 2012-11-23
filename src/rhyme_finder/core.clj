@@ -5,7 +5,7 @@
     ((comp doall line-seq) rdr)))
 
 (defn pronunciation-list "Loads all of the rhyme list into memory and returns it" []
-  (parse-lines "Documents/dev/rhyme-finder/cmudict.txt"))
+  (parse-lines "cmudict.txt"))
 
 (def pronunciations (pronunciation-list))
 
@@ -13,7 +13,7 @@
   (zipmap (keys m) (map f (vals m))))
 
 (defn phone-list "Loads all of the phones into memory" []
-  (parse-lines "Documents/dev/rhyme-finder/cmudict-phones.txt"))
+  (parse-lines "cmudict-phones.txt"))
 
 (def phones (phone-list))
 
@@ -26,7 +26,8 @@
      (map #(clojure.string/split % #"\s") phones)))))
 
 (defn get-poem [filename]
-  (parse-lines filename))
+  (remove clojure.string/blank?
+          (map clojure.string/lower-case (parse-lines filename))))
 
 (defn to-words [string-list]
   (clojure.string/split
@@ -41,18 +42,37 @@
       {(first word-pronunciation) (first (rest word-pronunciation))}
       nil)))
 
+(defn remove-numbers-from-string [a-string]
+  (apply str (filter #(not (Character/isDigit %)) a-string)))
+
 (defn load-pronunciations [words]
   "Takes a list of words and returns a mapping of those words to their pronunctiation"
   (update-values (comp
                   #(clojure.string/split % #"\s")
-                  remove-numbers-from-string)
+                  remove-numbers-from-string
+                  #(clojure.string/trim %))
                  (reduce merge (map #(check-line % words) pronunciations))))
 
-(defn remove-numbers-from-string [a-string]
-  (apply str (filter #(not (Character/isDigit %)) a-string)))
+(defn get-pronunctiations-from-file [filename]
+  "Takes a file and return a mapping of the words in the file to their pronunctiations"
+  (load-pronunciations (to-words (get-poem "filename"))))
+
+(defn get-wp-from-mapping[mapping line]
+  (into [] (apply concat (map mapping (clojure.string/split line #"\s")))))
 
 (defn remove-numbers [string-list]
   (map remove-numbers-from-string string-list))
+
+(defn is-vowel? [phone]
+  (some #{phone} (:vowel (get-phones))))
+
+(defn vowels-only [wp]
+  "returns only the vowel phones of the pronunciation"
+  (filter
+   (fn [phone]
+     (if (is-vowel? phone)
+       true
+       false)) wp))
 
 ; wp* denotes the word-pronunciation of a word
 (defn pure-rhyme? [wp1 wp2]
@@ -66,10 +86,21 @@
    (= (last (vowels-only wp1)) (last (vowels-only wp2)))
    (= (last wp1) (last wp2))))
 
-(defn vowels-only [wp]
-  "returns only the vowel phones of the pronunciation"
-  (filter
-   (fn [word]
-     (if (some #{word} (:vowel (get-phones)))
-       true
-       false)) wp))
+(defn indices [pred coll]
+  "http://stackoverflow.com/questions/8641305/how-do-i-find-the-index-of-an-element-that-matches-a-predicate-in-clojure#answer-8642069"
+  (keep-indexed #(when (pred %2) %1) coll))
+
+(defn get-end-rhyme [wp1]
+  (nth 
+   (split-at
+    (reduce max (seq (indices is-vowel? wp1)))
+    wp1)
+   1))
+  
+(defn classify-lines [poem]
+  "takes a poem and returns a mapping of each end rhyme to vector of the lines that have that end rhyme"
+  (let [wp-mapping (load-pronunciations (to-words poem))]
+    (group-by #(get-end-rhyme (get-wp-from-mapping wp-mapping %)) poem)))
+
+;rhyme-finder.core> (classify-lines (get-poem "poems/abab.txt"))
+;{("ey") ["i'm writing a poem today" "i don't care what you say"], ("eh" "l") ["i hope it turns out swell" "because we're all under a spell"]}
