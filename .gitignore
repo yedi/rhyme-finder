@@ -1,4 +1,5 @@
 /resources
+/extra
 /target
 /lib
 /classes
@@ -12,4 +13,3 @@ pom.xml
 .\#*
 \#*\#
 .DS_Store
-thoughts.txt

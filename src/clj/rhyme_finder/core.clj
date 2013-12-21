@@ -1,70 +1,66 @@
-(ns rhyme-finder.core)
+(ns rhyme-finder.core
+  (:require [clojure.string :as str]))
 
 (defn parse-lines [filename]
-  (with-open [rdr (clojure.java.io/reader filename)]
-    ((comp doall line-seq) rdr)))
+  (str/split-lines (slurp filename)))
 
-(defn pronunciation-list "Loads all of the rhyme list into memory and returns it" []
-  (parse-lines "cmudict.txt"))
+(defn parse-words [filename]
+  (str/split (slurp filename) #"\s+"))
 
-(def pronunciations (pronunciation-list))
+(def pronunciations (parse-lines "cmudict.txt"))
 
 (defn update-values [f m]
   (zipmap (keys m) (map f (vals m))))
 
-(defn phone-list "Loads all of the phones into memory" []
-  (parse-lines "cmudict-phones.txt"))
+(defn parse-phones [filename]
+  (let [phone-lines (map str/lower-case (parse-lines filename))
+        phone-list (map #(str/split % #"\s") phone-lines)
+        add-to-list-fn (fn [m [v k]] (update-in m [k] #(conj % v)))]
+    (clojure.walk/keywordize-keys
+     (reduce add-to-list-fn {} phone-list))))
 
-(def phones (phone-list))
-
-(defn get-phones []
- (update-values #(map clojure.string/lower-case %)
-   (clojure.walk/keywordize-keys
-    (reduce
-     (fn [m [v k]] (update-in m [k] #(conj % v)))
-     {}
-     (map #(clojure.string/split % #"\s") phones)))))
+(def phones (parse-phones "cmudict-phones.txt"))
 
 (defn get-poem [filename]
-  (remove clojure.string/blank?
-          (map clojure.string/lower-case (parse-lines filename))))
+  (remove str/blank?
+          (map str/lower-case (parse-lines filename))))
 
 (defn to-words [string-list]
-  (clojure.string/split
-   (clojure.string/join " " string-list)
-   #"\s"))
+  (str/split (str/join " " string-list) #"\s"))
 
-(defn check-line [line words]
+(defn check-line 
   "checks the line to see if it matches a word in the word-list. If so, returns
- the a map, {word <word's pronunciation>}. Else returns nil"
-  (let [word-pronunciation (clojure.string/split (clojure.string/lower-case line) #"\s" 2)]
-    (if (some #{(first word-pronunciation)} (map clojure.string/lower-case words))
+   a map, {word <word's pronunciation>}. Else returns nil"
+  [line words]
+  (let [word-pronunciation (str/split (str/lower-case line) #"\s" 2)]
+    (if (some #{(first word-pronunciation)} (map str/lower-case words))
       {(first word-pronunciation) (first (rest word-pronunciation))}
       nil)))
 
 (defn remove-numbers-from-string [a-string]
   (apply str (filter #(not (Character/isDigit %)) a-string)))
 
-(defn load-pronunciations [words]
+(defn load-pronunciations
   "Takes a list of words and returns a mapping of those words to their pronunctiation"
+  [words]
   (update-values (comp
-                  #(clojure.string/split % #"\s")
+                  #(str/split % #"\s")
                   remove-numbers-from-string
-                  #(clojure.string/trim %))
+                  #(str/trim %))
                  (reduce merge (map #(check-line % words) pronunciations))))
 
 (defn get-pronunctiations-from-file [filename]
   "Takes a file and return a mapping of the words in the file to their pronunctiations"
-  (load-pronunciations (to-words (get-poem "filename"))))
+  (load-pronunciations (to-words (get-poem filename))))
 
-(defn get-wp-from-mapping[mapping line]
-  (into [] (apply concat (map mapping (clojure.string/split line #"\s")))))
+(defn get-wp-from-mapping [mapping line]
+  (into [] (apply concat (map mapping (str/split line #"\s")))))
 
 (defn remove-numbers [string-list]
   (map remove-numbers-from-string string-list))
 
 (defn is-vowel? [phone]
-  (some #{phone} (:vowel (get-phones))))
+  (some #{phone} (:vowel phones)))
 
 (defn vowels-only [wp]
   "returns only the vowel phones of the pronunciation"
@@ -107,8 +103,9 @@
    []
    vec))
  
-(defn rhyme-scheme [poem]
+(defn rhyme-scheme
   "returns the rhyme scheme of a poem"
+  [poem]
   (let [wp-mapping (load-pronunciations (to-words poem))
         end-rhymes (map #(get-end-rhyme (get-wp-from-mapping wp-mapping %)) poem)]
     (reduce
@@ -124,4 +121,4 @@
                                         ;spell"]}
 
 ;rhyme-finder.core> (rhyme-scheme (get-poem "poems/abab.txt"))
-;"0101"
+                                        ;"0101"
