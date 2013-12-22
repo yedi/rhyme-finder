@@ -2,10 +2,10 @@
   (:require [clojure.string :as str]))
 
 (defn parse-lines [filename]
-  (str/split-lines (slurp filename)))
+  (map str/lower-case (str/split-lines (slurp filename))))
 
 (defn parse-words [filename]
-  (str/split (slurp filename) #"\s+"))
+  (map str/lower-case (str/split (slurp filename) #"\s+")))
 
 (def pronunciations (parse-lines "cmudict.txt"))
 
@@ -115,6 +115,34 @@
      ""
      end-rhymes)))
 
+(defn indexed-phones
+  "i'm writing a poem today => [
+     {:phone 'ay' :index 0},
+     {:phone 'm' :index 0},
+     {:phone 'r' :index 1},
+     {:phone 'ay' :index 1},
+     {:phone 't' :index 1},
+     {:phone 'ih' :index 1},
+     {:phone 'ng' :index 1},
+     {:phone 'ah' :index 2},
+     {:phone 'p' :index 3},
+     ...
+  ]"
+  [poem]
+  (let [wp-mapping (load-pronunciations (to-words poem))
+        poem-words (str/split (str/join " " poem) #"\s")]
+    (loop [i 0 rem poem-words ret []]
+      (if (seq rem)
+        (recur (inc i) (rest rem)
+               (concat ret (map (fn [phone] {:index i :phone phone})
+                                (get wp-map (first rem)))))
+        ret))))
+
+
+
+
+
+;====
 ;rhyme-finder.core> (classify-lines (get-poem "poems/abab.txt"))
 ;{("ey") ["i'm writing a poem today" "i don't care what you say"],
 ;("eh" "l") ["i hope it turns out swell" "because we're all under a
