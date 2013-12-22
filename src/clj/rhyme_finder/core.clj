@@ -30,7 +30,7 @@
           (map (comp clean-string str/lower-case) (parse-lines filename))))
 
 (defn to-words [string-list]
-  (str/split (str/join " " string-list) #"\s"))
+  (str/split (str/join " " string-list) #"\s+"))
 
 (defn check-line 
   "checks the line to see if it matches a word in the word-list. If so, returns
@@ -69,6 +69,9 @@
 (defn vowels-only [wp]
   "returns only the vowel phones of the pronunciation"
   (filter vowel? wp))
+
+(defn take-vowels [coll]
+  (filterv vowel? coll))
 
 ; wp* denotes the word-pronunciation of a word
 (defn pure-rhyme? [wp1 wp2]
@@ -119,6 +122,11 @@
      ""
      end-rhymes)))
 
+(defn ordered-phones
+  ([poem] (ordered-phones poem (load-pronunciations (to-words poem))))
+  ([poem wp-mapping]
+     (reduce (fn [ret w] (concat ret (get wp-mapping w))) [] (to-words poem))))
+
 (defn indexed-phones
   "i'm writing a poem today => [
      {:phone 'ay' :index 0},
@@ -142,6 +150,7 @@
                                                 :word (first rem)})
                                    (get wp-mapping (first rem)))))
            ret)))))
+
 
 (defn indexed-vowels
   ([poem] (indexed-vowels poem (load-pronunciations (to-words poem))))
@@ -170,7 +179,7 @@
  "returns the rhyme streams found within a poem"
  [poem syls dist min-combos]
  (let [wp-map (load-pronunciations (to-words poem))
-       uniques (set (partition syls 1 (filter vowel? (unique-phones poem wp-map))))
+       uniques (set (partition syls 1 (take-vowels (ordered-phones poem))))
        indexed-vowels (indexed-vowels poem wp-map)
        p-indexed-vowels (mapv vec (partition syls 1 indexed-vowels))
        match?-fn (fn [phone-vals vowels] (= phone-vals (map :phone vowels)))

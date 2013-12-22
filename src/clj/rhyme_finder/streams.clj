@@ -17,7 +17,7 @@
                  (if (> (- new curr) dist)
                    (conj ret [new])
                    (update-in ret [(dec (count ret))] conj new))))
-        (filter #(<= min-combo-len (count %)) ret)))))
+        (filterv #(<= min-combo-len (count %)) ret)))))
 
 (defn get-streams
   "[1 2 3 4] 3 = 2 1234343412343434 => [
