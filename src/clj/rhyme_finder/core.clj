@@ -8,6 +8,9 @@
 (defn parse-words [filename]
   (map str/lower-case (str/split (slurp filename) #"\s+")))
 
+(defn clean-string [string]
+  (str/replace string #"[^a-zA-Z_0-9'-]" " "))
+
 (def pronunciations (parse-lines "cmudict.txt"))
 
 (defn update-values [f m]
@@ -24,7 +27,7 @@
 
 (defn get-poem [filename]
   (remove str/blank?
-          (map str/lower-case (parse-lines filename))))
+          (map (comp clean-string str/lower-case) (parse-lines filename))))
 
 (defn to-words [string-list]
   (str/split (str/join " " string-list) #"\s"))
@@ -140,6 +143,12 @@
                                    (get wp-mapping (first rem)))))
            ret)))))
 
+(defn indexed-vowels
+  ([poem] (indexed-vowels poem (load-pronunciations (to-words poem))))
+  ([poem wp-mapping]
+     (filterv (fn [{:keys [phone]}] (vowel? phone))
+              (indexed-phones poem wp-mapping))))
+
 (defn unique-phones
   ([poem] (unique-phones poem (load-pronunciations (to-words poem))))
   ([poem wp-mapping]
@@ -162,8 +171,7 @@
  [poem syls dist min-combos]
  (let [wp-map (load-pronunciations (to-words poem))
        uniques (set (partition syls 1 (filter vowel? (unique-phones poem wp-map))))
-       indexed-vowels (filterv (fn [{:keys [phone]}] (vowel? phone))
-                              (indexed-phones poem wp-map))
+       indexed-vowels (indexed-vowels poem wp-map)
        p-indexed-vowels (mapv vec (partition syls 1 indexed-vowels))
        match?-fn (fn [phone-vals vowels] (= phone-vals (map :phone vowels)))
        streams (streams/get-streams uniques dist match?-fn min-combos p-indexed-vowels)]
