@@ -177,12 +177,15 @@
 
 (defn rhyme-streams
  "returns the rhyme streams found within a poem"
- [poem syls dist min-combos]
- (let [wp-map (load-pronunciations (to-words poem))
-       uniques (set (partition syls 1 (take-vowels (ordered-phones poem))))
-       indexed-vowels (indexed-vowels poem wp-map)
-       p-indexed-vowels (mapv vec (partition syls 1 indexed-vowels))
-       match?-fn (fn [phone-vals vowels] (= phone-vals (map :phone vowels)))
-       streams (streams/get-streams uniques dist match?-fn min-combos p-indexed-vowels)]
-   (map (partial update-streams p-indexed-vowels) streams)))
+ ([poem syls dist min-combos]
+    (let [wp-map (load-pronunciations (to-words poem))
+          uniques (set (partition syls 1 (take-vowels (ordered-phones poem wp-map))))
+          indexed-vowels (indexed-vowels poem wp-map)
+          p-indexed-vowels (mapv vec (partition syls 1 indexed-vowels))
+          match?-fn (fn [phone-vals vowels] (= phone-vals (map :phone vowels)))
+          streams (streams/get-streams uniques dist match?-fn min-combos p-indexed-vowels)]
+      (map (partial update-streams p-indexed-vowels) streams)))
+ ([poem syls-min syls-max dist min-combos]
+    (flatten (map #(rhyme-streams poem % dist min-combos)
+                  (range syls-min syls-max)))))
 
