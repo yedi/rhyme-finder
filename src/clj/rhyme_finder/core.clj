@@ -189,3 +189,31 @@
     (flatten (map #(rhyme-streams poem % dist min-combos)
                   (range syls-min syls-max)))))
 
+(defn compress [coll]
+  (when-let [[f & r] (seq coll)] 
+    (if (= f (first r)) 
+      (compress r) 
+      (cons f (compress r)))))
+
+(defn rstreams->words [rstreams]
+  "streams are a phone/word combination
+   rstreams are a list of streams
+   ([{:index 88, :phone 'eh', :word 'there'}
+     {:index 89, :phone 'ow', :word 'goes'}
+     {:index 90, :phone 'ae', :word 'gravity'}
+     {:index 90, :phone 'ah', :word 'gravity'}
+     {:index 90, :phone 'iy', :word 'gravity'}]
+    [{:index 93, :phone 'eh', :word 'there'}
+     {:index 94, :phone 'ow', :word 'goes'}
+     {:index 95, :phone 'ae', :word 'rabbit'}
+     {:index 95, :phone 'ah', :word 'rabbit'}
+     {:index 97, :phone 'iy', :word 'he'}]) =>
+   ('there goes gravity' 'there goes rabbit he')"
+  (map (fn [rstream] (str/join " " (compress (map :word rstream))))
+       rstreams))
+
+(defn rhyme-combos [rstreams]
+  (let [mapping-fn  (fn [ret {:keys [value streams]}]
+                      (let [streams (apply concat streams)]
+                        (update-in ret [value] #(conj % (rstreams->words streams)))))]
+    (reduce mapping-fn {} rstreams)))
