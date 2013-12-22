@@ -11,6 +11,9 @@ returns the poem in the correct format
     (rhyme-scheme poem) 
 returns the rhyme scheme of a poem
 
+	(rhyme-streams poem 2 15 2)
+returns the found rhyme combinations in a poem
+
 ## License
 
 Copyright © 2012 FIXME

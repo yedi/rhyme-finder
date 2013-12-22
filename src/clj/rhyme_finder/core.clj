@@ -1,5 +1,6 @@
 (ns rhyme-finder.core
-  (:require [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [rhyme-finder.streams :as streams]))
 
 (defn parse-lines [filename]
   (map str/lower-case (str/split-lines (slurp filename))))
@@ -53,18 +54,18 @@
   "Takes a file and return a mapping of the words in the file to their pronunctiations"
   (load-pronunciations (to-words (get-poem filename))))
 
-(defn get-wp-from-mapping [mapping line]
+(defn get-wp-from-line [mapping line]
   (into [] (apply concat (map mapping (str/split line #"\s")))))
 
 (defn remove-numbers [string-list]
   (map remove-numbers-from-string string-list))
 
-(defn is-vowel? [phone]
+(defn vowel? [phone]
   (some #{phone} (:vowel phones)))
 
 (defn vowels-only [wp]
   "returns only the vowel phones of the pronunciation"
-  (filter is-vowel? wp))
+  (filter vowel? wp))
 
 ; wp* denotes the word-pronunciation of a word
 (defn pure-rhyme? [wp1 wp2]
@@ -85,14 +86,14 @@
 (defn get-end-rhyme [wp1]
   (nth 
    (split-at
-    (reduce max (seq (indices is-vowel? wp1)))
+    (reduce max (seq (indices vowel? wp1)))
     wp1)
    1))
   
 (defn classify-lines [poem]
   "takes a poem and returns a mapping of each end rhyme to vector of the lines that have that end rhyme"
   (let [wp-mapping (load-pronunciations (to-words poem))]
-    (group-by #(get-end-rhyme (get-wp-from-mapping wp-mapping %)) poem)))
+    (group-by #(get-end-rhyme (get-wp-from-line wp-mapping %)) poem)))
 
 (defn settize [vec]
   (reduce
@@ -107,7 +108,7 @@
   "returns the rhyme scheme of a poem"
   [poem]
   (let [wp-mapping (load-pronunciations (to-words poem))
-        end-rhymes (map #(get-end-rhyme (get-wp-from-mapping wp-mapping %)) poem)]
+        end-rhymes (map #(get-end-rhyme (get-wp-from-line wp-mapping %)) poem)]
     (reduce
      (fn [scheme end-rhyme]
        (let [end-rhyme-set (settize end-rhymes)]
@@ -128,25 +129,54 @@
      {:phone 'p' :index 3},
      ...
   ]"
-  [poem]
-  (let [wp-mapping (load-pronunciations (to-words poem))
-        poem-words (str/split (str/join " " poem) #"\s")]
-    (loop [i 0 rem poem-words ret []]
-      (if (seq rem)
-        (recur (inc i) (rest rem)
-               (concat ret (map (fn [phone] {:index i :phone phone})
-                                (get wp-map (first rem)))))
-        ret))))
+  ([poem] (indexed-phones poem (load-pronunciations (to-words poem))))
+  ([poem wp-mapping]
+     (let [poem-words (str/split (str/join " " poem) #"\s")]
+       (loop [i 0 rem poem-words ret []]
+         (if (seq rem)
+           (recur (inc i) (rest rem)
+                  (concat ret (map (fn [phone] {:index i :phone phone
+                                                :word (first rem)})
+                                   (get wp-mapping (first rem)))))
+           ret)))))
+
+(defn unique-phones
+  ([poem] (unique-phones poem (load-pronunciations (to-words poem))))
+  ([poem wp-mapping]
+     (let [poem-words (str/split (str/join " " poem) #"\s")]
+       (set (reduce (fn [ret w] (concat ret (get wp-mapping w))) [] poem-words)))))
+
+(defn streams->items
+  "['this' 'is' 'a' 'test'] [2 3 1] => ['a' 'test' 'is']"
+  [coll streams]
+  (map (fn [s] (get coll s)) streams))
+
+(defn update-streams
+  "['this' 'is' 'a' 'test'] {:value 1 :streams [[1 2][3 2]]} =>
+   {:value 1 :streams [['is' 'a']['test' 'a']]"
+  [coll m]
+  (assoc m :streams (map (partial streams->items coll) (:streams m))))
+
+(defn rhyme-streams
+ "returns the rhyme streams found within a poem"
+ [poem syls dist min-combos]
+ (let [wp-map (load-pronunciations (to-words poem))
+       uniques (set (partition syls 1 (filter vowel? (unique-phones poem wp-map))))
+       indexed-vowels (filterv (fn [{:keys [phone]}] (vowel? phone))
+                              (indexed-phones poem wp-map))
+       p-indexed-vowels (mapv vec (partition syls 1 indexed-vowels))
+       match?-fn (fn [phone-vals vowels] (= phone-vals (map :phone vowels)))
+       streams (streams/get-streams uniques dist match?-fn min-combos p-indexed-vowels)]
+   (map (partial update-streams p-indexed-vowels) streams)))
 
 
 
 
-
-;====
-;rhyme-finder.core> (classify-lines (get-poem "poems/abab.txt"))
-;{("ey") ["i'm writing a poem today" "i don't care what you say"],
-;("eh" "l") ["i hope it turns out swell" "because we're all under a
+                                        ;====
+                                        ;rhyme-finder.core> (classify-lines (get-poem "poems/abab.txt"))
+                                        ;{("ey") ["i'm writing a poem today" "i don't care what you say"],
+                                        ;("eh" "l") ["i hope it turns out swell" "because we're all under a
                                         ;spell"]}
 
-;rhyme-finder.core> (rhyme-scheme (get-poem "poems/abab.txt"))
-                                        ;"0101"
+                                        ;rhyme-finder.core> (rhyme-scheme (get-poem "poems/abab.txt"))
+                                        ;"0101")

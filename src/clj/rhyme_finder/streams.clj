@@ -1,11 +1,10 @@
-(ns rhyme-finder.streams
-  (:require [rhyme-finder.core :as core]))
+(ns rhyme-finder.streams)
 
 (defn indices [pred coll]
   (keep-indexed #(when (pred %2) %1) coll))
 
 (defn combos
-  "34 4 = 2 1234343412343434 => [[2, 4, 6], [10, 12, 14]]"
+  "[3 4] 4 = 2 1234343412343434 => [[2, 4, 6], [10, 12, 14]]"
   [val dist match?-fn min-combo-len coll]
   (let [indexes (indices (partial match?-fn val) coll)]
     (loop [rem (rest indexes)
@@ -21,24 +20,28 @@
         (filter #(<= min-combo-len (count %)) ret)))))
 
 (defn get-streams
-  "1234343412343434 1 3 => [
+  "[1 2 3 4] 3 = 2 1234343412343434 => [
    	{:value 1 :streams []}
 	{:value 2 :streams []}
 	{:value 3 :streams [[2, 4, 6], [10, 12, 14]]}
 	{:value 4 :streams [[3, 5, 7], [11, 13, 15]]}
    ]
 
-   1234343412343434 2 3 => [
+    [12, 23, 34, 43] 3 = 2 1234343412343434=> [
 	{:value 12 :streams []}
 	{:value 23 :streams []}
 	{:value 34 :streams [[2, 4, 6], [10, 12, 14]]}
 	{:value 43 :streams [[3, 5], [11, 13]]}
    ]
-   Takes a collection, the length of your combination, and the distance to
-   search the collection and returns the streams."
-  [clen dist min-combo-len coll]
-  (let [colls (partition clen 1 coll)
-        append-fn (fn [ret val]
+   Takes the vals to check, the distance to search the collection, a matching fn,
+   the minimum # of streams a collection  and returns the streams."
+  [vals dist match?-fn min-len coll]
+  (let [append-fn (fn [ret val]
                     (conj ret {:value val
-                               :streams (combos val dist = min-combo-len colls)}))]
-    (reduce append-fn [] (set colls))))
+                               :streams (combos val dist match?-fn min-len coll)}))]
+    (reduce append-fn [] vals)))
+
+(defn find-streams
+  [clen dist match?-fn min-len coll]
+  (let [coll (partition clen 1 coll)]
+    (get-streams (set coll) dist match?-fn min-len coll)))
