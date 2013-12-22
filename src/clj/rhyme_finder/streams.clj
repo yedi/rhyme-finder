@@ -19,6 +19,9 @@
                    (update-in ret [(dec (count ret))] conj new))))
         (filterv #(<= min-combo-len (count %)) ret)))))
 
+(defn trim-empty [streams]
+  (filter (fn [s] (seq (:streams s))) streams))
+
 (defn get-streams
   "[1 2 3 4] 3 = 2 1234343412343434 => [
    	{:value 1 :streams []}
@@ -39,9 +42,11 @@
   (let [append-fn (fn [ret val]
                     (conj ret {:value val
                                :streams (combos val dist match?-fn min-len coll)}))]
-    (reduce append-fn [] vals)))
+    (trim-empty (reduce append-fn [] vals))))
+
 
 (defn find-streams
   [clen dist match?-fn min-len coll]
   (let [coll (partition clen 1 coll)]
     (get-streams (set coll) dist match?-fn min-len coll)))
+
