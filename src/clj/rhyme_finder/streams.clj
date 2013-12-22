@@ -5,8 +5,8 @@
   (keep-indexed #(when (pred %2) %1) coll))
 
 (defn combos
-  "34 4 = 1234343412343434 => [[2, 4, 6], [10, 12, 14]]"
-  [val dist match?-fn coll]
+  "34 4 = 2 1234343412343434 => [[2, 4, 6], [10, 12, 14]]"
+  [val dist match?-fn min-combo-len coll]
   (let [indexes (indices (partial match?-fn val) coll)]
     (loop [rem (rest indexes)
            curr (first indexes)
@@ -18,7 +18,7 @@
                  (if (> (- new curr) dist)
                    (conj ret [new])
                    (update-in ret [(dec (count ret))] conj new))))
-        ret))))
+        (filter #(<= min-combo-len (count %)) ret)))))
 
 (defn get-streams
   "1234343412343434 1 3 => [
@@ -32,12 +32,13 @@
 	{:value 12 :streams []}
 	{:value 23 :streams []}
 	{:value 34 :streams [[2, 4, 6], [10, 12, 14]]}
-	{:value 43 :streams [[3, 5, 7], [11, 13, 15]]}
+	{:value 43 :streams [[3, 5], [11, 13]]}
    ]
    Takes a collection, the length of your combination, and the distance to
    search the collection and returns the streams."
-  [clen dist coll]
+  [clen dist min-combo-len coll]
   (let [colls (partition clen 1 coll)
         append-fn (fn [ret val]
-                    (conj ret {:value val :streams (combos val dist = colls)}))]
+                    (conj ret {:value val
+                               :streams (combos val dist = min-combo-len colls)}))]
     (reduce append-fn [] (set colls))))
