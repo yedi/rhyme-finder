@@ -169,14 +169,3 @@
        streams (streams/get-streams uniques dist match?-fn min-combos p-indexed-vowels)]
    (map (partial update-streams p-indexed-vowels) streams)))
 
-
-
-
-                                        ;====
-                                        ;rhyme-finder.core> (classify-lines (get-poem "poems/abab.txt"))
-                                        ;{("ey") ["i'm writing a poem today" "i don't care what you say"],
-                                        ;("eh" "l") ["i hope it turns out swell" "because we're all under a
-                                        ;spell"]}
-
-                                        ;rhyme-finder.core> (rhyme-scheme (get-poem "poems/abab.txt"))
-                                        ;"0101")
