@@ -1,7 +1,7 @@
 (ns rhyme-finder.app.db
   (:require [datomic.api :as d]))
 
-(def uri "datomic:mem://rhymer")
+(def uri "datomic:free://localhost:4334/rhymer")
 (def schema (read-string (slurp "src/clj/rhyme_finder/app/schema.edn")))
 
 (defn create-db! []
@@ -15,3 +15,13 @@
   (let [conn (connect-db!)]
     @(d/transact conn schema)
     conn))
+
+(defn add-poem-analysis!
+  "Takes a poem's title, the poem's text, and the poem's analysis and
+   stores it in the db"
+  [title text analysis]
+  (let [conn (connect-db!)]
+    @(d/transact conn [{:db/id #db/id[:db.part/user]
+                        :poem/title title
+                        :poem/text text
+                        :poem/analysis analysis}])))

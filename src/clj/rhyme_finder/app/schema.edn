@@ -2,12 +2,12 @@
  ;; poem
  
  {:db/id #db/id[:db.part/db]
-  :db/ident :poem/name
+  :db/ident :poem/title
   :db/valueType :db.type/string
   :db/cardinality :db.cardinality/one
   :db/unique :db.unique/identity
   :db/index true
-  :db/doc "A poem's name"
+  :db/doc "A poem's title"
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]

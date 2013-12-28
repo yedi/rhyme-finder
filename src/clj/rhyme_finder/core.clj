@@ -1,5 +1,6 @@
 (ns rhyme-finder.core
   (:require [clojure.string :as str]
+            [clojure.walk :refer [keywordize-keys]]
             [rhyme-finder.streams :as streams]))
 
 (defn parse-lines [txt]
@@ -20,7 +21,7 @@
   (let [phone-lines (map str/lower-case (parse-lines (slurp filename)))
         phone-list (map #(str/split % #"\s") phone-lines)
         add-to-list-fn (fn [m [v k]] (update-in m [k] #(conj % v)))]
-    (clojure.walk/keywordize-keys
+    (keywordize-keys
      (reduce add-to-list-fn {} phone-list))))
 
 (def phones (parse-phones "cmudict-phones.txt"))
