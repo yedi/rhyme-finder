@@ -25,3 +25,12 @@
                         :poem/title title
                         :poem/text text
                         :poem/analysis analysis}])))
+
+(defn get-analysis [title]
+  (let [conn (connect-db!)
+        query '[:find ?analysis :in $ ?title
+                :where
+                [?poem :poem/title ?title]
+                [?poem :poem/analysis ?analysis]]]
+    (-> (d/q query (d/db conn) title)
+        first first read-string)))
