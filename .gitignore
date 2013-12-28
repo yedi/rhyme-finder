@@ -4,6 +4,7 @@
 /lib
 /classes
 /checkouts
+/songs
 pom.xml
 *.jar
 *.class

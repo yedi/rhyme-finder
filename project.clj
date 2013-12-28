@@ -6,7 +6,8 @@
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/clojurescript "0.0-2127"]
                  [ring "1.1.6"]
-                 [compojure "1.1.6"]]
+                 [compojure "1.1.6"]
+                 [com.datomic/datomic-free "0.9.4324"]]
   :plugins [[lein-cljsbuild "1.0.1"]
             [lein-ring "0.8.8"]]
   :source-paths ["src/clj"]
@@ -18,7 +19,7 @@
                                    :optimizations :none
                                    :output-dir "resources/public/out"
                                    :source-map true}}]}
-  :main rhyme-finder.app
-  :ring {:handler rhyme-finder.app/app
+  :main rhyme-finder.app.handler
+  :ring {:handler rhyme-finder.app.handler/app
          :auto-reload? true
          :auto-refresh true})

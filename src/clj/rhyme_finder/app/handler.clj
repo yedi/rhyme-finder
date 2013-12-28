@@ -1,4 +1,4 @@
-(ns rhyme-finder.app
+(ns rhyme-finder.app.handler
   (:use compojure.core)
   (:require [compojure.route :as route]
             [compojure.handler :as handler]
