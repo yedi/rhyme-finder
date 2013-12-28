@@ -4,8 +4,11 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [org.clojure/clojurescript "0.0-2127"]]
-  :plugins [[lein-cljsbuild "1.0.1"]]
+                 [org.clojure/clojurescript "0.0-2127"]
+                 [ring "1.1.6"]
+                 [compojure "1.1.6"]]
+  :plugins [[lein-cljsbuild "1.0.1"]
+            [lein-ring "0.8.8"]]
   :source-paths ["src/clj"]
   :cljsbuild {:builds [{
                         :id "rhyme-finder"
@@ -14,5 +17,8 @@
                                    :output-to "resources/public/rhymer.js"
                                    :optimizations :none
                                    :output-dir "resources/public/out"
-                                   ;:pretty-print true
-                                   :source-map true}}]})
+                                   :source-map true}}]}
+  :main rhyme-finder.app
+  :ring {:handler rhyme-finder.app/app
+         :auto-reload? true
+         :auto-refresh true})
