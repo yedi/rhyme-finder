@@ -2,22 +2,22 @@
   (:require [clojure.string :as str]
             [rhyme-finder.streams :as streams]))
 
-(defn parse-lines [filename]
-  (map str/lower-case (str/split-lines (slurp filename))))
+(defn parse-lines [txt]
+  (map str/lower-case (str/split-lines txt)))
 
-(defn parse-words [filename]
-  (map str/lower-case (str/split (slurp filename) #"\s+")))
+(defn parse-words [txt]
+  (map str/lower-case (str/split txt #"\s+")))
 
 (defn clean-string [string]
   (str/replace string #"[^a-zA-Z_0-9'-]" " "))
 
-(def pronunciations (parse-lines "cmudict.txt"))
+(def pronunciations (parse-lines (slurp "cmudict.txt")))
 
 (defn update-values [f m]
   (zipmap (keys m) (map f (vals m))))
 
 (defn parse-phones [filename]
-  (let [phone-lines (map str/lower-case (parse-lines filename))
+  (let [phone-lines (map str/lower-case (parse-lines (slurp filename)))
         phone-list (map #(str/split % #"\s") phone-lines)
         add-to-list-fn (fn [m [v k]] (update-in m [k] #(conj % v)))]
     (clojure.walk/keywordize-keys
@@ -25,9 +25,12 @@
 
 (def phones (parse-phones "cmudict-phones.txt"))
 
-(defn get-poem [filename]
+(defn format-as-poem [txt]
   (remove str/blank?
-          (map (comp clean-string str/lower-case) (parse-lines filename))))
+          (map (comp clean-string str/lower-case) (parse-lines txt))))
+
+(defn get-poem [filename]
+  (format-as-poem (slurp filename)))
 
 (defn to-words [string-list]
   (str/split (str/join " " string-list) #"\s+"))
