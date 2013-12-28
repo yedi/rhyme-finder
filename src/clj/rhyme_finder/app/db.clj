@@ -32,5 +32,5 @@
                 :where
                 [?poem :poem/title ?title]
                 [?poem :poem/analysis ?analysis]]]
-    (-> (d/q query (d/db conn) title)
-        first first read-string)))
+    (when-let [results (first (d/q query (d/db conn) title))]
+      (-> results first read-string))))
