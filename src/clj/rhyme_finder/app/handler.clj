@@ -9,20 +9,13 @@
             [rhyme-finder.app.db :as db]))
 
 (defroutes app-routes
-  (GET "/" [] (resp/redirect "/client.html"))
+  (GET "/" [] (resp/file-response "src/clj/rhyme_finder/app/client.html"))
   (route/resources "/")
   (route/not-found "Page not found"))
 
-(defn wrap-dir-index [handler]
-  (fn [req]
-    (handler
-     (update-in req [:uri]
-                #(if (= "/" %) "/client.html" %)))))
-
 (def app
   (-> app-routes
-      handler/site
-      (wrap-dir-index)))
+      handler/site))
 
 (defn start-server [port]
   (run-jetty app {:port port :join? false}))

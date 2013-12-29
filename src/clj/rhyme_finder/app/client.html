@@ -1,0 +1,27 @@
+<html>
+	<head>
+		<title>Rhyme Finder</title>
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+	</head>
+	<body>
+		<div class="container">
+			<div class="page-header">
+				<h3 class="text-muted">Reasoned Rhymer
+					<small>
+						<a class="pull-right" href="http://github.com/yedi/rhyme-finder">View on Github</a>
+					</small>
+				</h3>
+			</div>
+			<form id="add-poem-form" class="form-horizontal">
+				<button type="submit" class="btn btn-primary">Analyze poem or song</button></class>
+				<input id="poem-title" type="text" class="form-control" placeholder="Name of poem or song" />
+				<textarea id="poem-text" rows=16 class="form-control" placeholder="Lyrics go here"></textarea>
+			</form>	
+		</div> <!-- /container -->
+		
+		<script src="out/goog/base.js" type="text/javascript"></script>
+		<script src="rhymer.js" type="text/javascript"></script>
+		<script type="text/javascript">goog.require("rhyme_finder.rhymer");</script>
+	</body>
+</html>
