@@ -26,11 +26,13 @@
                         :poem/text text
                         :poem/analysis analysis}])))
 
-(defn get-analysis [title]
+(defn get-poem-data [title]
   (let [conn (connect-db!)
-        query '[:find ?analysis :in $ ?title
+        query '[:find ?analysis ?text :in $ ?title
                 :where
                 [?poem :poem/title ?title]
-                [?poem :poem/analysis ?analysis]]]
+                [?poem :poem/analysis ?analysis]
+                [?poem :poem/text ?text]]]
     (when-let [results (first (d/q query (d/db conn) title))]
-      (-> results first read-string))))
+      {:text (nth results 1)
+       :analysis (-> results first read-string)})))
