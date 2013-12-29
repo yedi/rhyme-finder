@@ -36,3 +36,12 @@
     (when-let [results (first (d/q query (d/db conn) title))]
       {:text (nth results 1)
        :analysis (-> results first read-string)})))
+
+(defn get-all-titles []
+  (let [conn (connect-db!)
+        query '[:find ?title
+                :where
+                [?poem :poem/analysis]
+                [?poem :poem/title ?title]]]
+    (map first (d/q query (d/db conn)))))
+
