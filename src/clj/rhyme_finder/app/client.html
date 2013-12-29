@@ -17,7 +17,9 @@
 			<div id="view-analyses" class="nav-section">
 				<form id="get-analysis-form" class="form-inline">
 					<select>
-						<option>Temp Value</option>
+					{% for title in titles %}
+						<option>{{title}}</option>
+					{% endfor %}
 					</select>
 					<button type="submit" class="btn btn-info">See Analysis</button>
 				</form>

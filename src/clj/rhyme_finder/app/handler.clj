@@ -7,7 +7,8 @@
             [ring.util.response :as resp]
             [ring.adapter.jetty :refer [run-jetty]]
             [rhyme-finder.core :as rhyme]
-            [rhyme-finder.app.db :as db]))
+            [rhyme-finder.app.db :as db]
+            [selmer.parser :as selmer]))
 
 (defn generate-response [data & [status]]
   {:status (or status 200)
@@ -29,8 +30,11 @@
         rs (analyze! title txt)]
     (generate-response (rhyme/rhyme-combos rs))))
 
+(selmer/cache-off!)
+
 (defroutes app-routes
-  (GET "/" [] (resp/file-response "src/clj/rhyme_finder/app/client.html"))
+  (GET "/" [] (selmer/render-file "rhyme_finder/app/client.html"
+                                  {:titles (db/get-all-titles)}))
   (POST "/analyze" req (new-analysis req))
   (route/resources "/")
   (route/not-found "Page not found"))

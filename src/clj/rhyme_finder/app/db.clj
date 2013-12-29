@@ -1,5 +1,6 @@
 (ns rhyme-finder.app.db
-  (:require [datomic.api :as d]))
+  (:require [datomic.api :as d]
+            [clojure.string :as str]))
 
 (def uri "datomic:free://localhost:4334/rhymer")
 (def schema (read-string (slurp "src/clj/rhyme_finder/app/schema.edn")))
@@ -43,5 +44,5 @@
                 :where
                 [?poem :poem/analysis]
                 [?poem :poem/title ?title]]]
-    (map first (d/q query (d/db conn)))))
+    (remove str/blank? (map first (d/q query (d/db conn))))))
 
