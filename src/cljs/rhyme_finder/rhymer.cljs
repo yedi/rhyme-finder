@@ -1,9 +1,10 @@
 (ns rhyme-finder.rhymer
-  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]])
-  (:require [goog.dom :as dom]
-            [goog.events :as events]
+  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]
+                   [dommy.macros :refer [node sel sel1]])
+  (:require [goog.events :as events]
             [cljs.core.async :refer [<! >! put! chan]]
-            [cljs.reader :refer [read-string]])
+            [cljs.reader :refer [read-string]]
+            [dommy.core :as dom])
   (:import [goog.net Jsonp]
            [goog Uri]))
 
@@ -19,7 +20,7 @@
        out)))
 
 (defn init []
-  (let [new-analyses (listen (dom/getElement "add-poem-form") "submit" true)]
+  (let [new-analyses (listen (sel1 :#add-poem-form) "submit" true)]
     (go (while true
           (<! new-analyses)
           (print "got new analysis")))))
