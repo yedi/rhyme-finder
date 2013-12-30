@@ -45,4 +45,3 @@
                 [?poem :poem/analysis]
                 [?poem :poem/title ?title]]]
     (remove str/blank? (map first (d/q query (d/db conn))))))
-

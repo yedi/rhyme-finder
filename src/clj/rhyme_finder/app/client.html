@@ -16,13 +16,15 @@
 			</div>
 			<div id="view-analyses" class="nav-section">
 				<form id="get-analysis-form" class="form-inline">
-					<select>
+					<select id="select-title">
 					{% for title in titles %}
 						<option>{{title}}</option>
 					{% endfor %}
 					</select>
 					<button type="submit" class="btn btn-info">See Analysis</button>
 				</form>
+				<div id="analysis">
+				</div>
 			</div>
 			<div id="add-poem" class="nav-section hide">
 				<form id="add-poem-form" class="form-info">

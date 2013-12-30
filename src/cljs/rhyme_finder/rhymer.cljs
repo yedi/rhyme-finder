@@ -18,7 +18,13 @@
            (cond prevent? (.preventDefault e))))
        out)))
 
-(defn post! [uri data]
+(defn ajax-get [uri data]
+  (let [out (chan)]
+    (GET uri {:params data
+              :handler (fn [resp] (put! out resp))})
+    out))
+
+(defn ajax-post! [uri data]
   (let [out (chan)]
     (POST uri {:params data
                :handler (fn [resp] (put! out resp))})
@@ -29,7 +35,15 @@
   (let [out (chan)
         poem-title (.-value (sel1 :#poem-title))
         poem-txt (.-value (sel1 :#poem-text))
-        req (post! "/analyze" {:title poem-title :text poem-txt})]
+        req (ajax-post! "/analyze" {:title poem-title :text poem-txt})]
+    (take! req (fn [resp] (put! out resp)))
+    out))
+
+(defn handle-get-analysis []
+  (let [out (chan)
+        title (.-value (sel1 :#select-title))
+        req (ajax-get "/analysis" {:title title})]
+    (print (str "retrieving analysis: " title))
     (take! req (fn [resp] (put! out resp)))
     out))
 
@@ -47,6 +61,12 @@
           (<! new-analyses)
           (print (<! (handle-new-analysis)))
           (print "analysis added to the database"))))
+
+  ;; for handling get analysis requests
+  (let [get-analysis (listen (sel1 :#get-analysis-form) "submit" true)]
+    (go (while true
+          (<! get-analysis)
+          (print (<! (handle-get-analysis))))))
 
   ;; for handling navigation
   (let [view-btn (sel1 :#view-analyses-btn)

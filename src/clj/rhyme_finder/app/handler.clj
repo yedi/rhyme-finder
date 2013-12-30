@@ -24,6 +24,10 @@
        (db/add-poem-analysis! title txt (pr-str rs))
        rs)))
 
+(defn get-analysis [req]
+  (let [title (-> req :params :title)]
+    (generate-response (db/get-poem-data title))))
+
 (defn new-analysis [req]
   (let [title (-> req :params :title)
         txt (-> req :params :text)
@@ -35,6 +39,7 @@
 (defroutes app-routes
   (GET "/" [] (selmer/render-file "rhyme_finder/app/client.html"
                                   {:titles (db/get-all-titles)}))
+  (GET "/analysis" req (get-analysis req))
   (POST "/analyze" req (new-analysis req))
   (route/resources "/")
   (route/not-found "Page not found"))
