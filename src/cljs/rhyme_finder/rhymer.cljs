@@ -5,7 +5,10 @@
             [cljs.core.async :refer [<! >! put! take! chan]]
             [cljs.reader :refer [read-string]]
             [dommy.core :as dom]
-            [ajax.core :refer [GET POST]]))
+            [ajax.core :refer [GET POST]]
+            [clojure.string :as str]
+            [om.core :as om]
+            [om.dom :as d]))
 
 (enable-console-print!)
 
@@ -78,4 +81,82 @@
            viewing (handle-nav view-btn (sel1 :#view-analyses))
            analyzing (handle-nav analyze-btn (sel1 :#add-poem)))))))
 
-(init)
+
+(defn gen-app-state [init-data comms]
+  (assoc init-data :comms comms :viewing nil))
+
+(def controls-ch
+  (chan))
+
+(def api-ch
+  (chan))
+
+(def app-state
+  (let [init-data (cljs.reader/read-string
+                   (str/replace js/initial_app_state #"&quot;" "\""))]
+    (atom (gen-app-state init-data {:controls control-ch :api api-ch}))))
+
+;; <div class="page-header">
+;; 				<ul class="nav nav-pills pull-right">
+;;           <li class="active" id="view-analyses-btn"><a href="#">View Analyses</a></li>
+;;           <li id="analyze-poem-btn"><a href="#">Analyze Poem</a></li>
+;;           <li><a href="http://github.com/yedi/rhyme-finder">View on Github</a></li>
+;;         </ul>
+;; 				<h3 class="text-muted">Reasoned Rhymer<h3>
+;; 			</div>
+
+(defn header [data owner]
+  (reify
+    om/IRender
+    (render [this]
+      (d/div #js {:className "page-header"}
+        (d/ul #js {:className "nav nav-pills pull-right"}
+          (d/li #js {:id "view-analyses-btn"
+                     :className (when (= (:viewing data) :get-analysis) "active")}
+            (d/a #js {:href "#"
+                      :onClick #(om/update! data :viewing :get-analysis)}
+               "View Analyses"))
+          (d/li #js {:id "analyze-poem-btn"
+                     :className (when (= (:viewing data) :post-analysis) "active")}
+            (d/a #js {:href "#"
+                      :onClick #(om/update! data :viewing :post-analysis)}
+               "Analyze Poem"))
+          (d/li nil
+            (d/a #js {:href "http://github.com/yedi/rhyme-finder"}
+              "View on Github")))
+        (d/h3 #js {:className "text-muted"} "Reasoned Rhymer")))))
+
+(defn post-view [data owner]
+  (reify
+    om/IRender
+    (render [this]
+       (d/div nil "post-view"))))
+
+(defn get-view [data owner]
+  (reify
+    om/IRender
+    (render [this]
+       (d/div nil "get-view"))))
+
+(defn app [data owner opts]
+  (reify
+    om/IRender
+    (render [this]
+      (d/div nil
+        (om/build header data)
+        (cond
+           (= (get-in data [:viewing]) :get-analysis) (om/build get-view data)
+           (= (get-in data [:viewing]) :post-analysis) (om/build post-view data)
+           :else (d/h2 nil "No View Hooked Up"))))))
+
+(defn start [target state]
+  (let [comms (:comms state)]
+    (om/root
+     app
+     state
+     {:target target
+      :opts {:comms comms}})))
+
+(start (sel1 :#app) app-state)
+
+@app-state
