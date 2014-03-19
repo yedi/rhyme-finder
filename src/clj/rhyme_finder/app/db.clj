@@ -35,7 +35,7 @@
                 [?poem :poem/analysis ?analysis]
                 [?poem :poem/text ?text]]]
     (when-let [results (first (d/q query (d/db conn) title))]
-      {:text (nth results 1)
+      {:text (nth results 1) :title title
        :analysis (-> results first read-string)})))
 
 (defn get-all-titles []
