@@ -96,15 +96,6 @@
                    (str/replace js/initial_app_state #"&quot;" "\""))]
     (atom (gen-app-state init-data {:controls control-ch :api api-ch}))))
 
-;; <div class="page-header">
-;; 				<ul class="nav nav-pills pull-right">
-;;           <li class="active" id="view-analyses-btn"><a href="#">View Analyses</a></li>
-;;           <li id="analyze-poem-btn"><a href="#">Analyze Poem</a></li>
-;;           <li><a href="http://github.com/yedi/rhyme-finder">View on Github</a></li>
-;;         </ul>
-;; 				<h3 class="text-muted">Reasoned Rhymer<h3>
-;; 			</div>
-
 (defn header [data owner]
   (reify
     om/IRender
@@ -130,14 +121,52 @@
   (reify
     om/IRender
     (render [this]
-       (d/div nil "post-view"))))
+       (d/div #js {:id "add-poem" :className "nav-section"}
+         (d/form #js {:id "add-poem-form" :className "form-info"}
+           (d/button #js {:type "submit" :className "btn btn-info"}
+              "Analyze poem or song")
+           (d/input #js {:id "poem-title" :type "text" :className "form-control"
+                         :placeholder "Name of poem or song"})
+           (d/textarea #js {:id "poem-text" :rows 16 :className "form-control"
+                         :placeholder "Lyrics go here"}))))))
+
+(defn handle-change [e owner]
+  (print (.. e -target -value))
+  (om/set-state! owner :selected (.. e -target -value)))
 
 (defn get-view [data owner]
   (reify
+    om/IInitState
+    (init-state [_]
+      {:get (chan) :resp (chan) :selected ""})
+    om/IWillMount
+    (will-mount [_]
+      (let [get-ch (om/get-state owner :get)
+            resp-ch (om/get-state owner :resp)]
+        (go-loop []
+          (let [getting (<! get-ch)]
+            (GET "/analysis"
+                  {:params {:title (om/get-state owner :selected)}
+                   :handler (fn [resp] (print resp) (om/update! data :analysis resp))})
+            (print getting))
+          (recur))))
     om/IRender
     (render [this]
-       (d/div nil "get-view"))))
-
+      (let [selected (om/get-state owner :selected)
+            get-ch (om/get-state owner :get)]
+        (d/div #js {:id "view-analyses" :className "nav-section"}
+          (d/form #js {:id "get-analysis-form" :className "form-inline"}
+            (apply d/select #js {:id "select-title"
+                                 :onChange #(handle-change % owner)}
+              (map (fn [title]
+                     (let [selected (= (om/get-state owner :selected) title)]
+                       (d/option #js {:selected (when selected "true")} title)))
+                   (:titles data)))
+            (d/button #js {:type "button" :className "btn btn-info"
+                           :onClick (fn [e] (put! get-ch selected) false)}
+              "See Analysis"))
+          (d/div nil (get-in data [:analysis :text])))))))
+ 
 (defn app [data owner opts]
   (reify
     om/IRender
@@ -157,6 +186,7 @@
      {:target target
       :opts {:comms comms}})))
 
+@app-state
+
 (start (sel1 :#app) app-state)
 
-@app-state
