@@ -36,14 +36,9 @@
 
 (selmer/cache-off!)
 
-(defn app-state []
-  (println (pr-str {:app-state (pr-str {:titles (db/get-all-titles)})}))
-  {:app-state (pr-str {:titles (db/get-all-titles)})})
-
 (defroutes app-routes
   (GET "/" [] (selmer/render-file "rhyme_finder/app/client.html"
-                                  ;{:app-state (pr-str {:titles (db/get-all-titles)})}
-                                  (app-state)))
+                                  {:app-state (pr-str {:titles (db/get-all-titles)})}))
   (GET "/analysis" req (get-analysis req))
   (POST "/analyze" req (new-analysis req))
   (route/resources "/")
