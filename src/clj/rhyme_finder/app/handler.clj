@@ -32,7 +32,7 @@
   (let [title (-> req :params :title)
         txt (-> req :params :text)
         rs (analyze! title txt)]
-    (generate-response (rhyme/rhyme-combos rs))))
+    (generate-response (db/get-poem-data title))))
 
 (selmer/cache-off!)
 
