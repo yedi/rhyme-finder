@@ -12,13 +12,13 @@
 (defn clean-string [string]
   (str/replace string #"[^a-zA-Z_0-9'-]" " "))
 
-(def pronunciations (parse-lines (slurp "cmudict.txt")))
+(def pronunciations (parse-lines (slurp (clojure.java.io/resource "cmudict.txt"))))
 
 (defn update-values [f m]
   (zipmap (keys m) (map f (vals m))))
 
 (defn parse-phones [filename]
-  (let [phone-lines (map str/lower-case (parse-lines (slurp filename)))
+  (let [phone-lines (map str/lower-case (parse-lines (slurp (clojure.java.io/resource filename))))
         phone-list (map #(str/split % #"\s") phone-lines)
         add-to-list-fn (fn [m [v k]] (update-in m [k] #(conj % v)))]
     (keywordize-keys
@@ -36,7 +36,7 @@
 (defn to-words [string-list]
   (str/split (str/join " " string-list) #"\s+"))
 
-(defn check-line 
+(defn check-line
   "checks the line to see if it matches a word in the word-list. If so, returns
    a map, {word <word's pronunciation>}. Else returns nil"
   [line words]
@@ -94,12 +94,12 @@
   (keep-indexed #(when (pred %2) %1) coll))
 
 (defn get-end-rhyme [wp1]
-  (nth 
+  (nth
    (split-at
     (reduce max (seq (indices vowel? wp1)))
     wp1)
    1))
-  
+
 (defn classify-lines [poem]
   "takes a poem and returns a mapping of each end rhyme to vector of the lines that have that end rhyme"
   (let [wp-mapping (load-pronunciations (to-words poem))]
@@ -113,7 +113,7 @@
        (conj vec-set item)))
    []
    vec))
- 
+
 (defn rhyme-scheme
   "returns the rhyme scheme of a poem"
   [poem]
@@ -194,9 +194,9 @@
                   (range syls-min syls-max)))))
 
 (defn compress [coll]
-  (when-let [[f & r] (seq coll)] 
-    (if (= f (first r)) 
-      (compress r) 
+  (when-let [[f & r] (seq coll)]
+    (if (= f (first r))
+      (compress r)
       (cons f (compress r)))))
 
 (defn rstreams->words [rstreams]
