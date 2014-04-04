@@ -146,7 +146,7 @@
   ]"
   ([poem] (indexed-phones poem (load-pronunciations (to-words poem))))
   ([poem wp-mapping]
-     (let [poem-words (str/split (str/join " " poem) #"\s")]
+     (let [poem-words (str/split (str/join " " poem) #"\s+")]
        (loop [i 0 rem poem-words ret []]
          (if (seq rem)
            (recur (inc i) (rest rem)

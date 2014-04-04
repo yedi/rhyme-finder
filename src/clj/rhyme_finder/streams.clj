@@ -36,8 +36,8 @@
 	{:value 34 :streams [[2, 4, 6], [10, 12, 14]]}
 	{:value 43 :streams [[3, 5], [11, 13]]}
    ]
-   Takes the vals to check, the distance to search the collection, a matching fn,
-   the minimum # of streams a collection  and returns the streams."
+   Takes the vals to check, the max distance between matching values, a matching fn,
+   the minimum # of streams a collection has and returns the streams."
   [vals dist match?-fn min-len coll]
   (let [append-fn (fn [ret val]
                     (conj ret {:value val
