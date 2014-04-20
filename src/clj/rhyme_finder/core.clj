@@ -28,7 +28,7 @@
 
 (defn format-as-poem [txt]
   (remove str/blank?
-          (map (comp clean-string str/lower-case) (parse-lines txt))))
+          (map (comp str/trim clean-string str/lower-case) (parse-lines txt))))
 
 (defn get-poem [filename]
   (format-as-poem (slurp filename)))
@@ -154,7 +154,6 @@
                                                 :word (first rem)})
                                    (get wp-mapping (first rem)))))
            ret)))))
-
 
 (defn indexed-vowels
   ([poem] (indexed-vowels poem (load-pronunciations (to-words poem))))
