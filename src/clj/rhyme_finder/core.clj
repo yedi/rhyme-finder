@@ -9,8 +9,10 @@
 (defn parse-words [txt]
   (map str/lower-case (str/split txt #"\s+")))
 
+(def invalid-chars #"[^a-zA-Z_0-9-ÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÞßàáâãäåæçèéêëìíîïðñòóôõöùúûüýÿ]")
+
 (defn clean-string [string]
-  (str/replace string #"[^a-zA-Z_0-9'-]" " "))
+  (str/replace string invalid-chars " "))
 
 (def pronunciations (parse-lines (slurp (clojure.java.io/resource "cmudict.txt"))))
 
