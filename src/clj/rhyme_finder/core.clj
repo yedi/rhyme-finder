@@ -9,7 +9,7 @@
 (defn parse-words [txt]
   (map str/lower-case (str/split txt #"\s+")))
 
-(def invalid-chars #"[^a-zA-Z_0-9-ÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÞßàáâãäåæçèéêëìíîïðñòóôõöùúûüýÿ]")
+(def invalid-chars #"[^a-zA-Z_0-9ÃÄÅÆÇÈÉÊËÌÍÎÏÑÒÓÔÕÖØÙÚÛÜÞßàáâãäåæçèéêëìíîïðñòóôõöùúûüýÿ]'-")
 
 (defn clean-string [string]
   (str/replace string invalid-chars " "))
